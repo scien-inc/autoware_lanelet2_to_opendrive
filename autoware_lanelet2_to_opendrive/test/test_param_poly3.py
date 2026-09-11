@@ -134,6 +134,52 @@ class TestParamPoly3DynamicSegments:
         assert param_polys[0].length >= 0.5
         assert param_polys[0].length == pytest.approx(spline.total_length, rel=1e-3)
 
+    def test_spline_shorter_than_minimum_becomes_straight_segment(self):
+        """A spline shorter than min_segment_length must yield one straight segment."""
+        points = np.array(
+            [
+                [0.0, 0.0, 0.0],
+                [0.3, 0.0, 0.0],
+            ]
+        )
+
+        spline = Splines(points, num_control_points=4)
+
+        with pytest.warns(UserWarning, match="single straight segment"):
+            param_polys = ParamPoly3.from_spline(spline)
+            # A manual segment count cannot be honoured either
+            manual_polys = ParamPoly3.from_spline(spline, num_segments=3)
+
+        # Previously every segment was dropped, leaving the road without geometry
+        assert len(param_polys) == 1
+        poly = param_polys[0]
+        assert poly.s == pytest.approx(0.0)
+        assert poly.length == pytest.approx(0.3, rel=1e-3)
+        assert (poly.aU, poly.bU, poly.cU, poly.dU) == (0.0, 1.0, 0.0, 0.0)
+        assert (poly.aV, poly.bV, poly.cV, poly.dV) == (0.0, 0.0, 0.0, 0.0)
+        assert len(manual_polys) == 1
+
+    def test_straight_segment_joins_the_spline_end_points(self):
+        """The straight segment must start and end exactly where the spline does."""
+        points = np.array(
+            [
+                [0.0, 0.0, 0.0],
+                [0.15, 0.02, 0.0],
+                [0.3, 0.0, 0.0],
+            ]
+        )
+
+        spline = Splines(points, num_control_points=4)
+
+        with pytest.warns(UserWarning):
+            (poly,) = ParamPoly3.from_spline(spline)
+
+        start = spline.evaluate(0.0, derivative=0)
+        end = spline.evaluate(spline.total_length, derivative=0)
+        assert (poly.x, poly.y) == pytest.approx((start[0], start[1]))
+        assert poly.x + poly.length * np.cos(poly.hdg) == pytest.approx(end[0])
+        assert poly.y + poly.length * np.sin(poly.hdg) == pytest.approx(end[1])
+
     def test_dynamic_segments_medium_road(self):
         """Test that medium roads get appropriate segment count."""
         # Create a medium-length road (10m)

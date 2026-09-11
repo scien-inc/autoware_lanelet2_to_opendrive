@@ -590,6 +590,44 @@ class ParamPoly3(GeometryBase):
         )
 
     @classmethod
+    def straight_from_spline_window(
+        cls, spline: "Splines", s_start: float, s_end: float
+    ) -> "ParamPoly3":
+        """Build a straight ParamPoly3 from the spline point at ``s_start`` to the one at ``s_end``.
+
+        Same form as the synthetic connecting roads (u(p) = p, v(p) = 0), so it
+        stays well-conditioned for windows shorter than ``min_segment_length``.
+        """
+        start = spline.evaluate(s_start, derivative=0)
+        end = spline.evaluate(s_end, derivative=0)
+        dx = float(end[0] - start[0])
+        dy = float(end[1] - start[1])
+        length = float(np.hypot(dx, dy))
+        if length > 1e-9:
+            hdg = float(np.arctan2(dy, dx))
+        else:
+            # Coincident end points: keep the tangent heading and the arc length
+            tangent = spline.evaluate(s_start, derivative=1)
+            hdg = float(np.arctan2(tangent[1], tangent[0]))
+            length = float(s_end - s_start)
+        return cls(
+            s=float(s_start),
+            x=float(start[0]),
+            y=float(start[1]),
+            hdg=hdg,
+            length=length,
+            aU=0.0,
+            bU=1.0,
+            cU=0.0,
+            dU=0.0,
+            aV=0.0,
+            bV=0.0,
+            cV=0.0,
+            dV=0.0,
+            pRange="arcLength",
+        )
+
+    @classmethod
     def from_spline(
         cls,
         spline: "Splines",
@@ -602,6 +640,7 @@ class ParamPoly3(GeometryBase):
         This method divides the spline into segments and fits a cubic polynomial
         to each segment. The number of segments is automatically calculated based
         on road length to ensure no segment is shorter than minimum threshold.
+        A spline shorter than the minimum is emitted as a single straight segment.
 
         Args:
             spline: The Splines object to convert
@@ -648,10 +687,21 @@ class ParamPoly3(GeometryBase):
             # Legacy behavior: fixed 10 segments if dynamic mode is disabled
             num_segments = 10
 
+        import warnings
+
+        # A spline shorter than the minimum cannot be split into segments that
+        # satisfy it; emit it whole as one straight segment instead of nothing
+        if total_length < config.min_segment_length:
+            warnings.warn(
+                f"Spline length {total_length:.6f}m is below minimum "
+                f"{config.min_segment_length}m; emitting it as a single "
+                "straight segment",
+                UserWarning,
+            )
+            return [cls.straight_from_spline_window(spline, 0.0, total_length)]
+
         # Divide the spline into segments
         segment_length = total_length / num_segments
-
-        import warnings
 
         for i in range(num_segments):
             # Arc length bounds for this segment
