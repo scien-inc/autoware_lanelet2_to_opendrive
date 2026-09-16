@@ -692,8 +692,7 @@ class ParamPoly3(GeometryBase):
 
         import warnings
 
-        # A spline shorter than the minimum cannot be split into segments that
-        # satisfy it; emit it whole as one straight segment instead of nothing
+        # Shorter than the minimum: emit the whole spline as one straight segment
         if total_length < config.min_segment_length:
             warnings.warn(
                 f"Spline length {total_length:.6f}m is below minimum "

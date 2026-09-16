@@ -65,7 +65,7 @@ def _build_planview_geometries(
     from ..config import DEFAULT_CONFIG
 
     pp3_cfg = parampoly3_config or ParamPoly3Config()
-    # Disabled, or a spline shorter than the minimum (one straight segment, see from_spline)
+    # Disabled, or too short to split (see from_spline)
     if (
         arcspiral_config is None
         or not arcspiral_config.enabled
