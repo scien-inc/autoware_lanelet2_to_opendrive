@@ -598,12 +598,14 @@ class ParamPoly3(GeometryBase):
         Same form as the synthetic connecting roads (u(p) = p, v(p) = 0), so it
         stays well-conditioned for windows shorter than ``min_segment_length``.
         """
+        from ..config import DEFAULT_CONFIG
+
         start = spline.evaluate(s_start, derivative=0)
         end = spline.evaluate(s_end, derivative=0)
         dx = float(end[0] - start[0])
         dy = float(end[1] - start[1])
         length = float(np.hypot(dx, dy))
-        if length > 1e-9:
+        if length > DEFAULT_CONFIG.geometry.epsilon:
             hdg = float(np.arctan2(dy, dx))
         else:
             # Coincident end points: keep the tangent heading and the arc length
