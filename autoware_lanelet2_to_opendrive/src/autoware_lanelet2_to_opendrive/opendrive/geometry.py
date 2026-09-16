@@ -648,7 +648,9 @@ class ParamPoly3(GeometryBase):
             num_segments: Number of ParamPoly3 segments to create.
                           If None (default), automatically calculated to ensure
                           segments are >= min_segment_length (0.5m).
-                          If specified, uses the provided value (backward compatible).
+                          If specified, uses the provided value (backward compatible),
+                          except for a spline shorter than min_segment_length, which
+                          always yields one straight segment.
             config: ParamPoly3Config for customizing segment generation parameters.
                    If None, uses defaults from config.py.
 
