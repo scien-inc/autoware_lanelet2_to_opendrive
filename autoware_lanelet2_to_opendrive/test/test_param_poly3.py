@@ -159,8 +159,8 @@ class TestParamPoly3DynamicSegments:
         assert (poly.aV, poly.bV, poly.cV, poly.dV) == (0.0, 0.0, 0.0, 0.0)
         assert len(manual_polys) == 1
 
-    def test_straight_segment_joins_the_spline_end_points(self):
-        """The straight segment must start and end exactly where the spline does."""
+    def test_straight_segment_follows_the_spline_chord(self):
+        """The straight segment starts at the spline start, follows its chord and keeps its arc length."""
         points = np.array(
             [
                 [0.0, 0.0, 0.0],
@@ -177,8 +177,10 @@ class TestParamPoly3DynamicSegments:
         start = spline.evaluate(0.0, derivative=0)
         end = spline.evaluate(spline.total_length, derivative=0)
         assert (poly.x, poly.y) == pytest.approx((start[0], start[1]))
-        assert poly.x + poly.length * np.cos(poly.hdg) == pytest.approx(end[0])
-        assert poly.y + poly.length * np.sin(poly.hdg) == pytest.approx(end[1])
+        assert poly.hdg == pytest.approx(
+            np.arctan2(end[1] - start[1], end[0] - start[0])
+        )
+        assert poly.length == pytest.approx(spline.total_length)
 
     def test_dynamic_segments_medium_road(self):
         """Test that medium roads get appropriate segment count."""

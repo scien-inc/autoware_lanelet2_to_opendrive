@@ -593,10 +593,11 @@ class ParamPoly3(GeometryBase):
     def straight_from_spline_window(
         cls, spline: "Splines", s_start: float, s_end: float
     ) -> "ParamPoly3":
-        """Build a straight ParamPoly3 from the spline point at ``s_start`` to the one at ``s_end``.
+        """Build a straight ParamPoly3 over [s_start, s_end] of ``spline`` along its chord.
 
-        Same form as the synthetic connecting roads (u(p) = p, v(p) = 0), so it
-        stays well-conditioned for windows shorter than ``min_segment_length``.
+        Same form as the synthetic connecting roads (u(p) = p, v(p) = 0). The
+        length is the window's arc length, so the road keeps the reference
+        line's s-domain for its elevation and lane-width profiles.
         """
         from ..config import DEFAULT_CONFIG
 
@@ -604,20 +605,18 @@ class ParamPoly3(GeometryBase):
         end = spline.evaluate(s_end, derivative=0)
         dx = float(end[0] - start[0])
         dy = float(end[1] - start[1])
-        length = float(np.hypot(dx, dy))
-        if length > DEFAULT_CONFIG.geometry.epsilon:
+        if np.hypot(dx, dy) > DEFAULT_CONFIG.geometry.epsilon:
             hdg = float(np.arctan2(dy, dx))
         else:
-            # Coincident end points: keep the tangent heading and the arc length
+            # Coincident end points: keep the tangent heading
             tangent = spline.evaluate(s_start, derivative=1)
             hdg = float(np.arctan2(tangent[1], tangent[0]))
-            length = float(s_end - s_start)
         return cls(
             s=float(s_start),
             x=float(start[0]),
             y=float(start[1]),
             hdg=hdg,
-            length=length,
+            length=float(s_end - s_start),
             aU=0.0,
             bU=1.0,
             cU=0.0,
