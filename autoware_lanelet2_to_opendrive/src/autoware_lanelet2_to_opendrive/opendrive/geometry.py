@@ -618,7 +618,7 @@ class ParamPoly3(GeometryBase):
             hdg=hdg,
             length=float(s_end - s_start),
             aU=0.0,
-            bU=1.0,
+            bU=float(np.hypot(dx, dy) / (s_end - s_start)),
             cU=0.0,
             dU=0.0,
             aV=0.0,
