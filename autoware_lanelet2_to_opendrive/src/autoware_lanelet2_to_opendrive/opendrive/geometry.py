@@ -593,11 +593,13 @@ class ParamPoly3(GeometryBase):
     def straight_from_spline_window(
         cls, spline: "Splines", s_start: float, s_end: float
     ) -> "ParamPoly3":
-        """Build a straight ParamPoly3 over [s_start, s_end] of ``spline`` along its chord.
+        """Build a straight ParamPoly3 along the chord of ``spline`` over [s_start, s_end].
 
-        v(p) = 0 and u(p) = (chord / arc length) * p, so the length keeps the
+        v(p) = 0 and u(p) = (chord / arc length) * p: the length keeps the
         window's arc length (the reference line's s-domain for elevation and
-        lane-width profiles) while the segment still ends at the spline's end.
+        lane-width profiles) and p = length lands on the spline's end point.
+        Consumers that re-sample by travelled distance (e.g. CARLA) end up to
+        length - chord further along the chord instead.
         """
         from ..config import DEFAULT_CONFIG
 
@@ -704,7 +706,12 @@ class ParamPoly3(GeometryBase):
                 "straight segment",
                 UserWarning,
             )
-            return [cls.straight_from_spline_window(spline, 0.0, total_length)]
+            segment = cls.straight_from_spline_window(spline, 0.0, total_length)
+            is_valid, error_msg = cls._validate_segment(segment, min_segment_length=0.0)
+            if not is_valid:
+                warnings.warn(f"Skipping invalid segment: {error_msg}", UserWarning)
+                return []
+            return [segment]
 
         # Divide the spline into segments
         segment_length = total_length / num_segments

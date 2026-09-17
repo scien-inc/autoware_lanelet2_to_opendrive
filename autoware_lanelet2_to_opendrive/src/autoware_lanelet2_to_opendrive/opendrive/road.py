@@ -73,7 +73,7 @@ def _build_planview_geometries(
     ):
         return cast(
             List[GeometryBase],
-            ParamPoly3.from_spline(spline, config=parampoly3_config),
+            ParamPoly3.from_spline(spline, config=pp3_cfg),
         )
 
     runs: List[ClassifiedSegment] = classify_spline(
