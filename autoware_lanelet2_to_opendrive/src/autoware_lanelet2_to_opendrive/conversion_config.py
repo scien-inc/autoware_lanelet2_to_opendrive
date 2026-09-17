@@ -58,7 +58,9 @@ class ParamPoly3Config:
 
     Attributes:
         min_segment_length: Minimum allowed segment length in meters (0.5m default)
-                           Segments shorter than this will be rejected.
+                           Segments shorter than this will be rejected; a whole
+                           spline shorter than this is emitted as a single
+                           straight segment (with a warning) instead.
                            CARLA requirement: segments must be >= 0.5m
         default_segment_length: Target segment length for dynamic calculation (1.0m)
                                Used when num_segments is not explicitly specified
