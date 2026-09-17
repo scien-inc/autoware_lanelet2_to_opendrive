@@ -155,12 +155,13 @@ class TestParamPoly3DynamicSegments:
         poly = param_polys[0]
         assert poly.s == pytest.approx(0.0)
         assert poly.length == pytest.approx(0.3, rel=1e-3)
-        assert (poly.aU, poly.bU, poly.cU, poly.dU) == (0.0, 1.0, 0.0, 0.0)
+        assert (poly.aU, poly.cU, poly.dU) == (0.0, 0.0, 0.0)
+        assert poly.bU == pytest.approx(1.0, rel=1e-3)
         assert (poly.aV, poly.bV, poly.cV, poly.dV) == (0.0, 0.0, 0.0, 0.0)
         assert len(manual_polys) == 1
 
-    def test_straight_segment_follows_the_spline_chord(self):
-        """The straight segment starts at the spline start, follows its chord and keeps its arc length."""
+    def test_straight_segment_joins_the_spline_end_points(self):
+        """The straight segment keeps the arc length and still ends where the spline ends."""
         points = np.array(
             [
                 [0.0, 0.0, 0.0],
@@ -177,10 +178,11 @@ class TestParamPoly3DynamicSegments:
         start = spline.evaluate(0.0, derivative=0)
         end = spline.evaluate(spline.total_length, derivative=0)
         assert (poly.x, poly.y) == pytest.approx((start[0], start[1]))
-        assert poly.hdg == pytest.approx(
-            np.arctan2(end[1] - start[1], end[0] - start[0])
-        )
         assert poly.length == pytest.approx(spline.total_length)
+        # The end point is reached at p = length thanks to bU = chord / arc length
+        u_end = poly.bU * poly.length
+        assert poly.x + u_end * np.cos(poly.hdg) == pytest.approx(end[0])
+        assert poly.y + u_end * np.sin(poly.hdg) == pytest.approx(end[1])
 
     def test_dynamic_segments_medium_road(self):
         """Test that medium roads get appropriate segment count."""

@@ -595,9 +595,9 @@ class ParamPoly3(GeometryBase):
     ) -> "ParamPoly3":
         """Build a straight ParamPoly3 over [s_start, s_end] of ``spline`` along its chord.
 
-        Same form as the synthetic connecting roads (u(p) = p, v(p) = 0). The
-        length is the window's arc length, so the road keeps the reference
-        line's s-domain for its elevation and lane-width profiles.
+        v(p) = 0 and u(p) = (chord / arc length) * p, so the length keeps the
+        window's arc length (the reference line's s-domain for elevation and
+        lane-width profiles) while the segment still ends at the spline's end.
         """
         from ..config import DEFAULT_CONFIG
 
@@ -605,20 +605,24 @@ class ParamPoly3(GeometryBase):
         end = spline.evaluate(s_end, derivative=0)
         dx = float(end[0] - start[0])
         dy = float(end[1] - start[1])
-        if np.hypot(dx, dy) > DEFAULT_CONFIG.geometry.epsilon:
+        chord = float(np.hypot(dx, dy))
+        length = float(s_end - s_start)
+        if chord > DEFAULT_CONFIG.geometry.epsilon:
             hdg = float(np.arctan2(dy, dx))
+            b_u = chord / length
         else:
-            # Coincident end points: keep the tangent heading
+            # Coincident end points: keep the tangent heading and unit speed
             tangent = spline.evaluate(s_start, derivative=1)
             hdg = float(np.arctan2(tangent[1], tangent[0]))
+            b_u = 1.0
         return cls(
             s=float(s_start),
             x=float(start[0]),
             y=float(start[1]),
             hdg=hdg,
-            length=float(s_end - s_start),
+            length=length,
             aU=0.0,
-            bU=float(np.hypot(dx, dy) / (s_end - s_start)),
+            bU=b_u,
             cU=0.0,
             dU=0.0,
             aV=0.0,

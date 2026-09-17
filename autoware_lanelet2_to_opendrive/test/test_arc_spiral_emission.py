@@ -117,10 +117,5 @@ def test_short_spline_becomes_single_straight_segment():
         )
     assert len(geoms) == 1
     assert geoms[0].length == pytest.approx(0.3, rel=1e-3)
-    assert (geoms[0].bU, geoms[0].cU, geoms[0].dU, geoms[0].cV, geoms[0].dV) == (
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-    )
+    assert geoms[0].bU == pytest.approx(1.0, rel=1e-3)
+    assert (geoms[0].cU, geoms[0].dU, geoms[0].cV, geoms[0].dV) == (0.0, 0.0, 0.0, 0.0)
