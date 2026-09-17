@@ -143,7 +143,7 @@ class ParamPoly3Constants:
                            Segments shorter than this will be rejected; a whole
                            spline shorter than this is emitted as a single
                            straight segment (with a warning) instead.
-                           CARLA requirement: segments must be >= 0.5m
+                           Floor for splitting roads into segments (CARLA, #203)
         default_segment_length: Target segment length for dynamic calculation (1.0m)
                                Used when num_segments is not explicitly specified
         max_segments: Maximum number of segments per road (100 default)
