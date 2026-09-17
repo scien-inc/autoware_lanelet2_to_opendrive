@@ -1578,7 +1578,7 @@ class Road:
             junction_id = junction_index + junction_id_offset
             # Find adjacent groups within this junction
             adjacent_groups_in_junction = find_adjacent_groups(
-                lanelet_map, set(junction_group)
+                lanelet_map, set(junction_group), routing_graph
             )
             # Lanes that come from or lead to different roads cannot share a
             # connecting road: its road-level links name one road each and
